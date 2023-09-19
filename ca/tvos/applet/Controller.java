@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  * Manages the life cycle of one or more <code>AppletAWT</code>,
- * <code>AppletJFC</code> or other <code>Managed</code> objects.
+ * <code>AppletJFC</code> or other <code>AppletModel</code> objects.
  *
  * @author Peter J. Grey
  *
@@ -22,7 +22,7 @@ public final class Controller implements AutoCloseable {
 	 * @author Peter J. Grey
 	 *
 	 */
-	private static class ControllerAdapter implements Managed {
+	private static class ControllerAdapter implements AppletModel {
 
 		private final Controller c;
 
@@ -47,43 +47,43 @@ public final class Controller implements AutoCloseable {
 
 	}
 
-	private final List<Managed> app_list = new ArrayList<>();
+	private final List<AppletModel> app_list = new ArrayList<>();
 	private boolean initialized = false;
 	private boolean is_running = false;
 
 	/**
-	 * Create a <code>Controller</code> and add the <code>Managed</code> objects, if
+	 * Create a <code>Controller</code> and add the <code>AppletModel</code> objects, if
 	 * any, in the order provided.
 	 */
-	public Controller(Managed... apps) {
+	public Controller(AppletModel... apps) {
 //		addExecutable( new GlobalExecution()); //debugging
 //		addExecutable( new ControllerTrace()); //debugging
-		for (Managed app : apps) {
+		for (AppletModel app : apps) {
 			addExecutable(app);
 		}
 	}
 
 	/**
-	 * Create a <code>Controller</code> and add the <code>Managed</code> elements in
+	 * Create a <code>Controller</code> and add the <code>AppletModel</code> elements in
 	 * the order the occur in the <code>List</code>. If the <code>List</code>
 	 * contains duplicates, the duplicated element is only added once.
 	 */
-	public Controller(List<Managed> list) {
+	public Controller(List<AppletModel> list) {
 //		addExecutable( new GlobalExecution()); //debugging
 //		addExecutable( new ControllerTrace()); //debugging
-		for (Managed app : list) {
+		for (AppletModel app : list) {
 			addExecutable(app);
 		}
 	}
 
 	/**
-	 * Add the <code>Managed</code> object at the end of the internal list of
-	 * <code>Managed</code> objects. If <code>app</code> was previously added the
+	 * Add the <code>AppletModel</code> object at the end of the internal list of
+	 * <code>AppletModel</code> objects. If <code>app</code> was previously added the
 	 * order is unchanged.
 	 * 
 	 * @throws IllegalStateException if <code>startApps</code> has been called.
 	 */
-	public void addExecutable(Managed app) {
+	public void addExecutable(AppletModel app) {
 		if (initialized)
 			throw new IllegalStateException();
 		if (!app_list.contains(app))
@@ -92,8 +92,8 @@ public final class Controller implements AutoCloseable {
 
 	/**
 	 * Add the <code>Controller</code> at the end of the internal list of
-	 * <code>Managed</code> objects.  <code>startApps</code> and <code>stopApps</code> for dependant
-	 * will be called with <code>start</code> and <code>stop</code> for the <code>Managed</code> apps.
+	 * <code>AppletModel</code> objects.  <code>startApps</code> and <code>stopApps</code> for dependant
+	 * will be called with <code>start</code> and <code>stop</code> for the <code>AppletModel</code> apps.
 	 * 
 	 * @throws IllegalStateException if <code>startApps</code> has been called.
 	 */
@@ -102,27 +102,27 @@ public final class Controller implements AutoCloseable {
 	}
 
 	/**
-	 * <code>start</code> the <code>Managed</code> objects controlled by this
+	 * <code>start</code> the <code>AppletModel</code> objects controlled by this
 	 * <code>Controller</code>. The first invocation will call <code>init</code> for
 	 * each object before calling <code>start</code>. <code>init</code> and
-	 * <code>start</code> are invoked in the order that <code>Managed</code> objects
+	 * <code>start</code> are invoked in the order that <code>AppletModel</code> objects
 	 * were added.
 	 */
 	public void startApps() {
 		if (!initialized) {
 			initialized = true;
-			for (Managed am : app_list) {
+			for (AppletModel am : app_list) {
 				am.init();
 			}
 		}
 		is_running = true;
-		for (Managed am : app_list) {
+		for (AppletModel am : app_list) {
 			am.start();
 		}
 	}
 
 	/**
-	 * <code>stop</code> the <code>Managed</code> objects controlled by this
+	 * <code>stop</code> the <code>AppletModel</code> objects controlled by this
 	 * <code>Controller</code>. If The first invocation will call <code>init</code>
 	 * for each object before calling <code>start</code>.
 	 * 
@@ -134,13 +134,13 @@ public final class Controller implements AutoCloseable {
 		is_running = false;
 		int i = app_list.size();
 		while (--i >= 0) {
-			Managed app = app_list.get(i);
+			AppletModel app = app_list.get(i);
 			app.stop();
 		}
 	}
 
 	/**
-	 * Call <code>destroy</code> for each <code>Managed</code> object. No action if
+	 * Call <code>destroy</code> for each <code>AppletModel</code> object. No action if
 	 * <code>startApps</code> has not been called. <code>close</code> may be safely
 	 * called more than once.
 	 */
@@ -149,7 +149,7 @@ public final class Controller implements AutoCloseable {
 		if (initialized) {
 			int i = app_list.size();
 			while (--i >= 0) {
-				Managed app = app_list.get(i);
+				AppletModel app = app_list.get(i);
 				app.destroy();
 			}
 		}
@@ -157,7 +157,7 @@ public final class Controller implements AutoCloseable {
 	}
 
 	/**
-	 * Indicates whether the <code>Managed</code> objects managed by the
+	 * Indicates whether the <code>AppletModel</code> objects managed by the
 	 * <code>Controller</code> are currently in a <code>start</code>ed state.
 	 */
 	public boolean isActive() {

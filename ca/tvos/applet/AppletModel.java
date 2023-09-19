@@ -4,7 +4,7 @@
 package ca.tvos.applet;
 
 /**
- * Managed describes the life cycle operations of an applet which are
+ * <code>AppletModel</code> describes the life cycle operations of an applet which are
  * controlled by a hosting platform. An applet is a small program that is
  * intended not to be run on its own, but rather to be embedded inside another
  * application.
@@ -14,7 +14,7 @@ package ca.tvos.applet;
  * @author peter
  *
  */
-public interface Managed {
+public interface AppletModel {
 
 	/**
 	 * Called by the hosting platform to inform this applet that it has been loaded
