@@ -1,28 +1,40 @@
+/**
+ * 
+ */
 package ca.tvos.applet;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+/**
+ * WindowListener to manage a Controller with the activation, deactivation, and closing of a java.awt.Window.
+ * 
+ */
 public class ControllerWL extends WindowAdapter {
-
-	private final Controller controller;
-	public ControllerWL(Controller c) {
-		controller = c;
-	}
 	
+	private final Controller target;
+	
+	public ControllerWL(Controller operand) {
+		target = operand;
+	}
+
+	/** Destroy applets on Window close. */
 	@Override
 	public void windowClosed(WindowEvent e) {
-		controller.close();
+//		SysIO.println("window close event");
+		target.close();
 	}
 
+	/** Start applets on Window activation. */
 	@Override
 	public void windowActivated(WindowEvent e) {
-		controller.startApps();
+		target.startApps();
 	}
 
+	/** Stop applets on Window activation. */
 	@Override
 	public void windowDeactivated(WindowEvent e) {
-		controller.stopApps();
+		target.stopApps();
 	}
 
 }

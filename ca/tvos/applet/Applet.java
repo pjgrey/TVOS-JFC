@@ -2,6 +2,7 @@
  */
 package ca.tvos.applet;
 
+import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.net.MalformedURLException;
@@ -22,30 +23,69 @@ public interface Applet extends AppletModel, Applet0 {
 	public static final String PARAMETER_TAG_APPLET_NAME = "NAME";
 
 	/**
-	 * Determines if this applet is active. An applet is marked active just before
-	 * its start method is called. It becomes inactive just before its stop method
-	 * is called.
+	 * Returns information about this applet. An applet should override this method
+	 * to return a String containing information about the author, version, and
+	 * copyright of the applet.
+	 * 
+	 * The implementation of this method provided by the Applet class returns null.
+	 * 
+	 * @return a string containing information about the author, version, and
+	 *         copyright of the applet
 	 */
-	public default boolean isActive() {
-		return getStub().controller.isActive();
+	public default String getAppletInfo() {
+		return null;
 	}
 
 	/**
-	 * Indicates if this container is a validate root. Applet objects are the
-	 * validate roots, and, therefore, they override this method to return true.
+	 * Gets the base URL. This is the URL of the directory which contains this
+	 * applet.
+	 * 
+	 * @return the base URL of the directory which contains this applet
+	 * @see getDocumentBase()
 	 */
-	public default boolean isValidateRoot() {
-		return true;
+	public default URL getCodeBase() {
+		try {
+			return Path.of(".").toUri().toURL();
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
-	/** Returns the value of the named parameter in the HTML tag. */
-	public default String getParameter(String name) {
-		return getStub().params.get(name.toUpperCase());
+	// extension
+	/**
+	 * Gets the base Path. This is the Path of the directory which contains this
+	 * applet.
+	 * 
+	 * @return the base Path of the directory which contains this applet
+	 * @see getDocumentBase()
+	 */
+	public default Path getCodeBasePath() {
+		return Path.of(".");
 	}
 
-	/** Requests that the argument string be displayed in the "status window". */
-	public default void showStatus(String msg) {
-		getAppletContext().displayStatus(msg);
+	// extension
+	/**
+	 * Returns an Image object that can then be painted on the screen using the
+	 * given <code>Path</code>.
+	 *
+	 * Not part of the original java.applet.Applet.
+	 *
+	 * @param path
+	 * @return the image at the specified Path
+	 */
+	public default Image getImage(Path path) {
+		return Toolkit.getDefaultToolkit().createImage(path.toString());
+	}
+
+	// extension
+	/**
+	 * Returns an Image object that can then be painted on the screen using the
+	 * given <code>Path</code> and relative file name.
+	 *
+	 */
+	public default Image getImage(Path path, String name) {
+		return getImage(path.resolve(name));
 	}
 
 	/**
@@ -56,7 +96,13 @@ public interface Applet extends AppletModel, Applet0 {
 	 * this applet attempts to draw the image on the screen, the data will be
 	 * loaded. The graphics primitives that draw the image will incrementally paint
 	 * on the screen.
+	 * 
+	 * 
+	 * @param url an absolute URL giving the location of the image
+	 * @return the image at the specified URL
+	 * @see Image
 	 */
+
 	public default Image getImage(URL url) {
 		return getAppletContext().getImage(url);
 	}
@@ -70,6 +116,11 @@ public interface Applet extends AppletModel, Applet0 {
 	 * this applet attempts to draw the image on the screen, the data will be
 	 * loaded. The graphics primitives that draw the image will incrementally paint
 	 * on the screen.
+	 * 
+	 * @param url  an absolute URL giving the base location of the image
+	 * @param name the location of the image, relative to the url argument
+	 * @return the image at the specified URL
+	 * @see Image
 	 */
 	public default Image getImage(URL url, String name) {
 		try {
@@ -81,18 +132,17 @@ public interface Applet extends AppletModel, Applet0 {
 	}
 
 	/**
+	 * Returns the value of the named parameter. In java.applet.Applet, parameters
+	 * are provided in the HTML tag; in this implementation they should be set
+	 * explicitly before the applet is activated.
 	 * 
-	 * Returns information about this applet. An applet should override this method
-	 * to return a String containing information about the author, version, and
-	 * copyright of the applet.
+	 * The name argument is case insensitive.
 	 * 
-	 * 
-	 * The implementation of this method provided by the Applet class returns null.
-	 * 
-	 * @return
+	 * @param name a parameter name
+	 * @return the value of the named parameter, or null if not set
 	 */
-	public default String getAppletInfo() {
-		return null;
+	public default String getParameter(String name) {
+		return getStub().params.get(name.toUpperCase());
 	}
 
 	/**
@@ -100,98 +150,52 @@ public interface Applet extends AppletModel, Applet0 {
 	 * An applet should override this method to return an array of strings
 	 * describing these parameters.
 	 * 
-	 * 
 	 * Each element of the array should be a set of three strings containing the
 	 * name, the type, and a description.
 	 * 
 	 * The implementation of this method provided by the Applet class returns null.
 	 * 
-	 * 
-	 * 
-	 * @return
+	 * @return an array describing the parameters this applet looks for
 	 */
-	public default String[][] getParameterInfo()
-
-	{
+	public default String[][] getParameterInfo() {
 		return null;
 	}
 
+	// extension
 	/**
-	 * Returns the AudioClip object specified by the URL and name arguments.
-	 * 
-	 * This method always returns immediately, whether or not the audio clip exists.
-	 * When this applet attempts to play the audio clip, the data will be loaded.
-	 * 
-	 * 
-	 * 
-	 * @param url
-	 * @param name
-	 * @return
+	 * Returns the applet stub. This method is intended for internal use by the
+	 * library. AppletStub does not have members with public visibility.
 	 */
-	public default AudioClip getAudioClip(URL url, String name) {
-		try {
-			return getAppletContext().getAudioClip(new URL(url, name));
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-			return null;
-		}
+	public AppletStub getStub();
+
+	/**
+	 * Determines if this applet is active. An applet is marked active just before
+	 * its start method is called. It becomes inactive just before its stop method
+	 * is called.
+	 * 
+	 * @return true if the applet is active; false otherwise
+	 * @see start()
+	 * @see stop()
+	 * 
+	 */
+	public default boolean isActive() {
+		return getStub().controller.isActive();
 	}
 
 	/**
-	 * Plays the audio clip at the specified absolute URL. Nothing happens if the
-	 * audio clip cannot be found.
-	 */
-	public default void play(URL url) {
-		AudioClip clip = getAudioClip(url, StringUtil.EMPTY_STRING);
-		if (clip == null)
-			return;
-		clip.play();
-	}
-
-	/**
-	 * Plays the audio clip given the URL and a specifier that is relative to it.
-	 * Nothing happens if the audio clip cannot be found.
-	 */
-	public default void play(URL url, String name) {
-		AudioClip clip = getAudioClip(url, name);
-		if (clip == null)
-			return;
-		clip.play();
-	}
-
-	/**
-	 * Returns the AudioClip object specified by the URL argument.
+	 * Indicates if this container is a validate root.
 	 * 
-	 * This method always returns immediately, whether or not the audio clip exists.
-	 * When this applet attempts to play the audio clip, the data will be loaded.
+	 * Applet objects are the validate roots, and, therefore, they override this
+	 * method to return true.
 	 * 
+	 * @return true
+	 * @see Container.isValidateRoot()
 	 */
-	public default AudioClip getAudioClip(URL url) {
-		return getAppletContext().getAudioClip(url);
+	public default boolean isValidateRoot() {
+		return true;
 	}
 
-	/* extensions */
-
-	/**
-	 * Returns an Image object that can then be painted on the screen using the
-	 * given <code>Path</code>.
-	 * 
-	 * @param path
-	 * @return
-	 */
-	public default Image getImage(Path path) {
-		return Toolkit.getDefaultToolkit().createImage(path.toString());
-	}
-
-	/**
-	 * Returns an Image object that can then be painted on the screen using the
-	 * given <code>Path</code> and relative file name.
-	 *
-	 */
-	public default Image getImage(Path path, String name) {
-		return getImage(path.resolve(name));
-	}
-
+	// extension
 	/**
 	 * Set a parameter that will be available to the <code>Applet</code>. Parameter
 	 * <code>name</code> is case insensitive.
@@ -200,4 +204,164 @@ public interface Applet extends AppletModel, Applet0 {
 		getStub().params.put(name.toUpperCase(), value);
 	}
 
+	// extension
+	/**
+	 * Set multiple parameters that will be available to the <code>Applet</code>, in
+	 * a sequence of name/value pairs. Parameter <code>name</code> is case
+	 * insensitive. If an odd number of arguments is provided, the last parameter
+	 * value will be the empty string.
+	 * 
+	 * Not part of original java.applet.Applet.
+	 */
+	public default void setParameters(String... param) {
+		int i = 0;
+		while (i < param.length) {
+			String name = param[i];
+			++i;
+			if (i < param.length) {
+				String value = param[i];
+				++i;
+				setParameter(name, value);
+			} else
+				setParameter(name, StringUtil.EMPTY_STRING);
+		}
+	}
+
+	/**
+	 * Requests that the argument string be displayed in the "status window". Many
+	 * browsers and applet viewers provide such a window, where the application can
+	 * inform users of its current state.
+	 * 
+	 * @param msg a string to display in the status window
+	 */
+	public default void showStatus(String msg) {
+		getAppletContext().showStatus(msg);
+	}	
+	
+	
+	/* # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # */
+	/* # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # */
+	/* # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # */
+
+
+
+
+
+	
+	/* # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # */
+	
+	
+	
+	
+	
+	
+
+	
+
+
+	/* extensions */
+
+
+	
+/*
+============================================================================================================================
+ * */
+	
+
+	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+
+
+	/**
+	 * Requests that this applet be resized.
+	 * 
+	 * @param width the new requested width for the applet
+	 * @param height the new requested height for the applet
+	 */
+	public default void resize(int width,
+			 int height) { throw new UnsupportedOperationException(); }
+
+
+
+	
+	/**
+	 * Requests that this applet be resized.
+	 * 
+	 * @param d an object giving the new width and height
+	 */
+	public default void resize(Dimension d) { throw new UnsupportedOperationException(); }
+
+	/** 
+	 * Set the Applet context.  
+	 * @param context
+	 * 
+	 * @throws IllegalStateException if context has already been set.
+	 */
+	public void setAppletContext(AppletContext context);
+	
+
+
+
+/* * ********************************************************* */
+	
+
+
+	
+
+
+	
+
+	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+	
+
+
+
+	
+	
+	
+	
+	
+/* 
+ * *******************************************************
+ * */
+	
+	
+
+	
+
+	
+
+
+	/* extensions */
+
+	
+	
+	
+	
+
+	
+
+	
+
+
+
+
+	
+	
+
+
+
+
+
+	
+	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+	
+
+
+	
+
+	
+	
+
+	
 }
